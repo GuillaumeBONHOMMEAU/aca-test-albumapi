@@ -1,0 +1,42 @@
+name: Trigger auto deployment for angular-app-aca
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ main ]
+    paths:
+    - 'src/**'
+    - '.github/workflows/angular-app-aca-AutoDeployTrigger-c3323c95-6135-4ab2-a8f0-d986693dd365.yml'
+
+  # Allow manual trigger 
+  workflow_dispatch:
+      
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.ANGULARAPPACA_AZURE_CREDENTIALS }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          appSourcePath: ${{ github.workspace }}/src 
+          registryUrl: ca008f5ed7ccacr.azurecr.io
+          registryUsername: ${{ secrets.ANGULARAPPACA_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.ANGULARAPPACA_REGISTRY_PASSWORD }}
+          containerAppName: angular-app-aca
+          resourceGroup: ACA-AngularApp-Rg
+          imageToBuild: ca008f5ed7ccacr.azurecr.io/angular-app-aca:${{ github.sha }}
+          dockerfilePath: Dockerfile
+
+     
+
